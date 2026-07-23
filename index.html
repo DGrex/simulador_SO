@@ -1,0 +1,1776 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulador de Exámenes — UNEMI</title>
+<style>
+  :root{
+    --bg: #0f172a;
+    --bg-soft: #f1f5f9;
+    --panel: #ffffff;
+    --navy: #12233f;
+    --navy2: #1c3763;
+    --accent: #f2701e;
+    --accent2: #ff8c3d;
+    --blue: #2563eb;
+    --green: #16a34a;
+    --green-bg: #ecfdf3;
+    --red: #dc2626;
+    --red-bg: #fef2f2;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --radius: 14px;
+    --shadow: 0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.06);
+    --shadow-lg: 0 10px 30px rgba(15,23,42,0.12);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+    background: var(--bg-soft);
+    color: var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ===== HEADER ===== */
+  .app-header{
+    background: linear-gradient(135deg, var(--navy) 0%, var(--navy2) 60%, #24406e 100%);
+    color:#fff;
+    padding:22px 24px;
+    position:relative;
+    overflow:hidden;
+  }
+  .app-header::before{
+    content:"";
+    position:absolute;
+    top:-40%; right:-10%;
+    width:300px; height:300px;
+    background: radial-gradient(circle, rgba(242,112,30,0.25) 0%, transparent 70%);
+  }
+  .app-header-inner{
+    max-width:1100px;
+    margin:0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    flex-wrap:wrap;
+    position:relative;
+    z-index:1;
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .brand-badge{
+    width:44px;height:44px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.4rem;
+    box-shadow: 0 4px 12px rgba(242,112,30,0.4);
+  }
+  .brand h1{
+    margin:0;
+    font-size:1.25rem;
+    font-weight:700;
+    letter-spacing:0.2px;
+  }
+  .brand p{
+    margin:2px 0 0;
+    font-size:0.82rem;
+    color:#c7d3ea;
+  }
+  .global-stats{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .gstat{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.15);
+    border-radius:10px;
+    padding:8px 14px;
+    text-align:center;
+    min-width:80px;
+  }
+  .gstat .num{ font-size:1.15rem; font-weight:700; }
+  .gstat .lbl{ font-size:0.68rem; color:#c7d3ea; text-transform:uppercase; letter-spacing:0.5px; }
+
+  .accent-line{
+    height:4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2), var(--accent));
+  }
+
+  /* ===== LAYOUT ===== */
+  .container{
+    max-width:1100px;
+    margin:0 auto;
+    padding:28px 20px 70px;
+  }
+  .breadcrumb{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:0.88rem;
+    color:var(--muted);
+    margin-bottom:20px;
+    flex-wrap:wrap;
+  }
+  .breadcrumb button{
+    background:none;
+    border:none;
+    color:var(--blue);
+    font-weight:600;
+    cursor:pointer;
+    font-size:0.88rem;
+    padding:0;
+  }
+  .breadcrumb span.sep{ color:#cbd5e1; }
+
+  /* ===== HOME: SUBJECT CARDS ===== */
+  .home-title{
+    font-size:1.5rem;
+    font-weight:800;
+    margin:0 0 6px;
+    color:var(--navy);
+  }
+  .home-sub{
+    color:var(--muted);
+    margin:0 0 26px;
+    font-size:0.95rem;
+  }
+  .subject-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap:18px;
+  }
+  .subject-card{
+    background:var(--panel);
+    border-radius:var(--radius);
+    padding:24px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+    cursor:pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position:relative;
+    overflow:hidden;
+  }
+  .subject-card:hover{
+    transform:translateY(-3px);
+    box-shadow:var(--shadow-lg);
+  }
+  .subject-card .icon{
+    font-size:2rem;
+    margin-bottom:10px;
+  }
+  .subject-card h3{
+    margin:0 0 6px;
+    font-size:1.15rem;
+    color:var(--navy);
+  }
+  .subject-card p{
+    margin:0 0 14px;
+    color:var(--muted);
+    font-size:0.88rem;
+    line-height:1.4;
+  }
+  .subject-card .count-pill{
+    display:inline-block;
+    background:var(--bg-soft);
+    color:var(--navy2);
+    font-weight:700;
+    font-size:0.78rem;
+    padding:5px 12px;
+    border-radius:20px;
+  }
+  .subject-card .stripe{
+    position:absolute; top:0; left:0; right:0; height:5px;
+  }
+  .subject-card.c-so .stripe{ background: linear-gradient(90deg,#2563eb,#60a5fa); }
+  .subject-card.c-linux .stripe{ background: linear-gradient(90deg,#16a34a,#4ade80); }
+
+  /* ===== TOPIC PAGE ===== */
+  .topic-header{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:22px;
+  }
+  .topic-icon{
+    width:52px;height:52px;
+    border-radius:12px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.6rem;
+    color:#fff;
+  }
+  .c-so .topic-icon{ background: linear-gradient(135deg,#2563eb,#1d4ed8); }
+  .c-linux .topic-icon{ background: linear-gradient(135deg,#16a34a,#15803d); }
+  .topic-header h2{ margin:0; font-size:1.3rem; color:var(--navy); }
+  .topic-header p{ margin:2px 0 0; color:var(--muted); font-size:0.88rem; }
+
+  .mode-tabs{
+    display:flex;
+    gap:8px;
+    margin-bottom:22px;
+    background:var(--panel);
+    padding:6px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    width:fit-content;
+  }
+  .mode-tab{
+    background:none;
+    border:none;
+    padding:10px 20px;
+    border-radius:8px;
+    font-weight:600;
+    font-size:0.92rem;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .mode-tab.active{
+    background:var(--navy2);
+    color:#fff;
+  }
+
+  .card{
+    background:var(--panel);
+    border-radius:var(--radius);
+    padding:24px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+    margin-bottom:18px;
+  }
+
+  /* ===== SETUP ===== */
+  .setup-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:20px;
+    margin-bottom:20px;
+  }
+  @media(max-width:640px){ .setup-grid{ grid-template-columns:1fr; } }
+  .setup-field label{
+    display:block;
+    font-weight:700;
+    font-size:0.85rem;
+    color:var(--navy);
+    margin-bottom:8px;
+  }
+  select, input[type=number]{
+    width:100%;
+    padding:11px 12px;
+    border-radius:9px;
+    border:1.5px solid var(--border);
+    font-size:0.95rem;
+    background:#fff;
+    color:var(--text);
+  }
+  select:focus, input:focus{ outline:2px solid var(--blue); outline-offset:1px; }
+
+  .topic-checks{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-bottom:20px;
+  }
+  .topic-chip{
+    border:1.5px solid var(--border);
+    background:#fff;
+    border-radius:10px;
+    padding:10px 16px;
+    font-size:0.88rem;
+    font-weight:600;
+    color:var(--muted);
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    transition:border-color 0.15s, color 0.15s, background 0.15s;
+  }
+  .topic-chip.selected{
+    border-color: var(--blue);
+    color: var(--blue);
+    background:#eff6ff;
+  }
+  .topic-chip .chk{
+    width:16px;height:16px;
+    border-radius:4px;
+    border:2px solid currentColor;
+    display:flex;align-items:center;justify-content:center;
+    font-size:0.65rem;
+  }
+
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:13px 26px;
+    font-weight:700;
+    font-size:0.98rem;
+    cursor:pointer;
+    transition:opacity 0.15s, transform 0.1s;
+  }
+  .btn:active{ transform:scale(0.98); }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff;
+    box-shadow: 0 4px 14px rgba(242,112,30,0.35);
+  }
+  .btn-primary:hover{ opacity:0.94; }
+  .btn-ghost{
+    background:#fff;
+    color:var(--navy2);
+    border:1.5px solid var(--navy2);
+  }
+  .btn-ghost:hover{ background:#f3f6fb; }
+  .btn:disabled{ opacity:0.5; cursor:not-allowed; }
+
+  /* ===== QUIZ ACTIVE ===== */
+  .quiz-topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:14px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+  .quiz-progress-text{ font-weight:700; color:var(--navy); font-size:0.95rem; }
+  .live-score{
+    display:flex;
+    gap:8px;
+  }
+  .live-pill{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:6px 14px;
+    border-radius:20px;
+    font-weight:700;
+    font-size:0.88rem;
+  }
+  .live-pill.ok{ background:var(--green-bg); color:var(--green); }
+  .live-pill.bad{ background:var(--red-bg); color:var(--red); }
+
+  .progress-bar{
+    height:8px;
+    background:#e2e8f0;
+    border-radius:6px;
+    overflow:hidden;
+    margin-bottom:20px;
+  }
+  .progress-fill{
+    height:100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition:width 0.3s;
+  }
+  .question-text{
+    font-size:1.12rem;
+    font-weight:700;
+    margin-bottom:18px;
+    line-height:1.45;
+    color:var(--navy);
+  }
+  .option{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+    padding:14px 16px;
+    border:1.5px solid var(--border);
+    border-radius:10px;
+    margin-bottom:10px;
+    cursor:pointer;
+    transition:background 0.12s, border-color 0.12s;
+    font-size:0.96rem;
+    line-height:1.4;
+  }
+  .option:hover{ background:#f8fafc; border-color:#cbd5e1; }
+  .option.selected{ border-color:var(--blue); background:#eff6ff; }
+  .option.correct{ border-color:var(--green); background:var(--green-bg); }
+  .option.incorrect{ border-color:var(--red); background:var(--red-bg); }
+  .option .option-letter{
+    font-weight:800;
+    color:var(--navy2);
+    min-width:20px;
+  }
+  .option.correct .option-letter{ color:var(--green); }
+  .option.incorrect .option-letter{ color:var(--red); }
+  .option code{
+    background:#f1f5f9;
+    padding:1px 5px;
+    border-radius:4px;
+    font-family: 'Consolas', monospace;
+  }
+
+  .quiz-actions{
+    display:flex;
+    justify-content:space-between;
+    margin-top:20px;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  /* ===== RESULTS ===== */
+  .result-hero{
+    text-align:center;
+    padding:20px 10px 30px;
+  }
+  .result-ring{
+    width:140px;height:140px;
+    border-radius:50%;
+    margin:0 auto 16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    background: conic-gradient(var(--accent) calc(var(--pct,0)*1%), #e2e8f0 0);
+    position:relative;
+  }
+  .result-ring::before{
+    content:"";
+    position:absolute;
+    width:112px;height:112px;
+    background:#fff;
+    border-radius:50%;
+  }
+  .result-ring .ring-txt{
+    position:relative;
+    z-index:1;
+    font-weight:800;
+    font-size:1.6rem;
+    color:var(--navy);
+  }
+  .result-ring .ring-sub{
+    position:relative;
+    z-index:1;
+    font-size:0.72rem;
+    color:var(--muted);
+  }
+  .result-msg{ font-size:1.05rem; font-weight:600; color:var(--navy); margin-bottom:18px; }
+  .stat-row{
+    display:flex;
+    gap:14px;
+    justify-content:center;
+    flex-wrap:wrap;
+    margin-bottom:22px;
+  }
+  .stat-pill{
+    background:var(--bg-soft);
+    border-radius:20px;
+    padding:9px 18px;
+    font-size:0.9rem;
+    font-weight:700;
+  }
+  .stat-pill.ok{ color:var(--green); }
+  .stat-pill.bad{ color:var(--red); }
+
+  .review-item{
+    border-left:4px solid var(--border);
+    padding:12px 16px;
+    margin-bottom:12px;
+    background:#fafbfc;
+    border-radius:0 8px 8px 0;
+  }
+  .review-item.ok{ border-color:var(--green); }
+  .review-item.bad{ border-color:var(--red); }
+  .review-item p{ margin:4px 0; font-size:0.9rem; line-height:1.4; }
+  .review-item .qtext{ font-weight:700; margin-bottom:6px; color:var(--navy); }
+
+  /* ===== STUDY MODE ===== */
+  .search-box{
+    width:100%;
+    padding:13px 16px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    font-size:0.98rem;
+    margin-bottom:6px;
+  }
+  .study-count{ color:var(--muted); font-size:0.85rem; margin-bottom:16px; }
+  .study-item{
+    background:var(--panel);
+    border-radius:12px;
+    padding:18px;
+    margin-bottom:12px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+  }
+  .study-item .qnum{
+    color:var(--accent);
+    font-weight:800;
+    font-size:0.78rem;
+    text-transform:uppercase;
+    letter-spacing:0.4px;
+  }
+  .study-item .qtext{
+    font-weight:700;
+    margin:6px 0 12px;
+    color:var(--navy);
+    line-height:1.4;
+  }
+  .study-item .opt-line{
+    padding:8px 12px;
+    border-radius:7px;
+    margin-bottom:5px;
+    font-size:0.9rem;
+    background:#f8fafc;
+    line-height:1.4;
+  }
+  .study-item .opt-line.correct{
+    background:var(--green-bg);
+    color:#0d6b34;
+    font-weight:700;
+  }
+
+  footer{
+    text-align:center;
+    color:#94a3b8;
+    font-size:0.8rem;
+    padding:24px;
+  }
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-header-inner">
+    <div class="brand">
+      <div class="brand-badge">🎓</div>
+      <div>
+        <h1>Simulador de Exámenes</h1>
+        <p>UNEMI · Ingeniería de Software</p>
+      </div>
+    </div>
+    <div class="global-stats" id="global-stats">
+      <div class="gstat"><div class="num" id="gstat-total">0</div><div class="lbl">Preguntas</div></div>
+      <div class="gstat"><div class="num" id="gstat-done">0</div><div class="lbl">Practicadas</div></div>
+      <div class="gstat"><div class="num" id="gstat-acc">—</div><div class="lbl">Precisión</div></div>
+    </div>
+  </div>
+</div>
+<div class="accent-line"></div>
+
+<div class="container">
+
+  <div class="breadcrumb" id="breadcrumb"></div>
+
+  <!-- ============ HOME ============ -->
+  <div id="view-home">
+    <div class="home-title">¿Qué quieres repasar hoy?</div>
+    <p class="home-sub">Elige una materia para acceder al simulador de examen o al modo de estudio.</p>
+    <div class="subject-grid" id="subject-grid"></div>
+  </div>
+
+  <!-- ============ TOPIC PAGE ============ -->
+  <div id="view-topic" class="hidden">
+    <div class="topic-header" id="topic-header-box">
+      <div class="topic-icon" id="topic-icon">📘</div>
+      <div>
+        <h2 id="topic-title"></h2>
+        <p id="topic-desc"></p>
+      </div>
+    </div>
+
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="mt-quiz" onclick="switchMode('quiz')">📝 Simulador</button>
+      <button class="mode-tab" id="mt-study" onclick="switchMode('study')">📚 Estudio</button>
+    </div>
+
+    <!-- QUIZ SETUP -->
+    <div id="quiz-setup" class="card">
+      <h3 style="margin-top:0;color:var(--navy);">Configura tu simulacro</h3>
+      <div class="topic-checks" id="topic-checks"></div>
+      <div class="setup-grid">
+        <div class="setup-field">
+          <label>Cantidad de preguntas</label>
+          <select id="numQuestions">
+            <option value="10">10 preguntas</option>
+            <option value="20">20 preguntas</option>
+            <option value="30">30 preguntas</option>
+            <option value="all">Todas (banco completo)</option>
+          </select>
+        </div>
+        <div class="setup-field">
+          <label>Orden</label>
+          <select id="orderMode">
+            <option value="random">Aleatorio</option>
+            <option value="fixed">En orden original</option>
+          </select>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startQuiz()">▶ Comenzar simulacro</button>
+    </div>
+
+    <!-- QUIZ ACTIVE -->
+    <div id="quiz-active" class="card hidden">
+      <div class="quiz-topbar">
+        <div class="quiz-progress-text" id="quiz-progress"></div>
+        <div class="live-score">
+          <div class="live-pill ok">✅ <span id="live-ok">0</span></div>
+          <div class="live-pill bad">❌ <span id="live-bad">0</span></div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="question-text" id="question-text"></div>
+      <div id="options-container"></div>
+      <div class="quiz-actions">
+        <button class="btn btn-ghost" onclick="quitQuiz()">Salir</button>
+        <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" disabled>Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- QUIZ RESULT -->
+    <div id="quiz-result" class="card hidden">
+      <div class="result-hero">
+        <div class="result-ring" id="result-ring">
+          <div class="ring-txt" id="ring-txt"></div>
+          <div class="ring-sub">de aciertos</div>
+        </div>
+        <div class="result-msg" id="score-msg"></div>
+        <div class="stat-row">
+          <div class="stat-pill ok" id="stat-ok"></div>
+          <div class="stat-pill bad" id="stat-bad"></div>
+        </div>
+        <button class="btn btn-primary" onclick="restartSetup()">🔁 Nuevo simulacro</button>
+      </div>
+      <h3 style="color:var(--navy);">Revisión de respuestas</h3>
+      <div id="review-list"></div>
+    </div>
+
+    <!-- STUDY MODE -->
+    <div id="study-panel" class="hidden">
+      <div class="card">
+        <input type="text" class="search-box" id="searchBox" placeholder="🔍 Buscar pregunta..." oninput="renderStudy()">
+        <div class="study-count" id="study-count"></div>
+      </div>
+      <div id="study-list"></div>
+    </div>
+
+  </div>
+
+</div>
+
+<footer>Simulador generado a partir del material de estudio del curso — UNEMI, Ingeniería de Software.</footer>
+
+<script>
+/* ============================================================
+   BANCO DE DATOS — 4 categorías agrupadas en 2 materias
+   ============================================================ */
+const LETTERS = ['a','b','c','d'];
+
+
+/* ---------- CATEGORÍA 1: Sistemas Operativos (Conceptos) ---------- */
+const Q_SO_BASE = [
+{q:"¿Cómo se relaciona la memoria virtual con la paginación bajo demanda?",
+ o:["La memoria virtual puede usar paginación bajo demanda para cargar solo las páginas requeridas por el proceso.",
+    "La memoria virtual impide que existan fallas de página durante la ejecución.",
+    "La memoria virtual convierte todos los archivos del usuario en segmentos fijos.",
+    "La paginación bajo demanda reemplaza completamente al almacenamiento secundario."], c:0},
+{q:"¿Cuál de las siguientes afirmaciones describe mejor la organización de una computadora desde la perspectiva de un sistema operativo?",
+ o:["Es la clasificación comercial del equipo según marca, modelo y generación.",
+    "Es únicamente la forma física en que se ubican los componentes dentro del gabinete.",
+    "Es el conjunto de programas instalados por el usuario para realizar tareas de oficina.",
+    "Es la disposición funcional de CPU, memoria, dispositivos de entrada/salida y buses para ejecutar instrucciones y transferir datos."], c:3},
+{q:"¿Qué función cumplen los controladores de dispositivos?",
+ o:["Servir de intermediarios entre el sistema operativo y el hardware específico del dispositivo.",
+    "Convertir todos los archivos en páginas de memoria virtual.",
+    "Asignar permisos de usuario dentro de la matriz de acceso.",
+    "Eliminar la necesidad de usar hardware físico en el computador."], c:0},
+{q:"¿Qué es el acceso directo a un archivo?",
+ o:["Un método que permite acceder a una posición específica del archivo sin recorrer todo el contenido anterior.",
+    "Un método que obliga a recorrer todos los datos desde el inicio para llegar a un registro.",
+    "Un mecanismo usado únicamente para conectar dispositivos de entrada.",
+    "Una técnica que solo permite leer archivos almacenados en memoria caché."], c:0},
+{q:"¿Cuál acción normalmente requiere una llamada al sistema?",
+ o:["Leer un concepto teórico sin ejecutar software.",
+    "Imaginar la salida esperada de un algoritmo.",
+    "Cambiar mentalmente el nombre de una variable durante el diseño.",
+    "Crear un archivo desde un programa de usuario."], c:3},
+{q:"¿Cuál característica identifica principalmente a un sistema operativo distribuido?",
+ o:["Solo permite ejecutar un programa a la vez.",
+    "Coordina varios equipos conectados para que trabajen como un sistema integrado.",
+    "Funciona únicamente en una computadora sin conexión a red.",
+    "Se limita a administrar archivos locales sin comunicación externa."], c:1},
+{q:"¿Qué son las llamadas al sistema?",
+ o:["Errores que siempre detienen el funcionamiento del equipo.",
+    "Mensajes publicitarios generados por aplicaciones.",
+    "Comandos usados únicamente para cambiar la apariencia del escritorio.",
+    "Solicitudes que un programa realiza al sistema operativo para acceder a servicios protegidos."], c:3},
+{q:"¿Por qué la memoria del kernel requiere una administración especial?",
+ o:["Porque la memoria del kernel no participa en la ejecución del sistema operativo.",
+    "Porque el kernel se ejecuta solamente desde dispositivos externos.",
+    "Porque contiene estructuras críticas del sistema operativo y opera con privilegios elevados.",
+    "Porque solo almacena archivos temporales del usuario común."], c:2},
+{q:"¿Qué establece el principio de mínimo privilegio?",
+ o:["Que los permisos deben asignarse de forma aleatoria para evitar ataques externos.",
+    "Que todos los usuarios deben trabajar siempre con permisos de administrador.",
+    "Que cada usuario, proceso o programa debe tener solo los permisos necesarios para cumplir su función.",
+    "Que los recursos críticos deben quedar disponibles para cualquier aplicación instalada."], c:2},
+{q:"¿Cuál es la diferencia entre virus, gusano y troyano?",
+ o:["El virus es siempre inofensivo, el gusano es un método de respaldo y el troyano es una técnica de autenticación.",
+    "El virus cifra datos, el gusano administra permisos y el troyano reemplaza la memoria RAM.",
+    "El virus se adjunta a archivos, el gusano se propaga por sí mismo en redes y el troyano aparenta ser legítimo pero oculta funciones maliciosas.",
+    "El virus solo afecta impresoras, el gusano solo afecta monitores y el troyano solo afecta teclados."], c:2},
+{q:"¿Qué es un cortafuegos o firewall?",
+ o:["Un método de autenticación basado únicamente en huella digital.",
+    "Un mecanismo que controla el tráfico de red permitido o bloqueado según reglas de seguridad.",
+    "Un algoritmo de sustitución de páginas usado por la memoria virtual.",
+    "Un sistema de archivos diseñado para montar discos externos."], c:1},
+{q:"¿Qué es una matriz de acceso?",
+ o:["Una herramienta exclusiva para organizar archivos en carpetas jerárquicas.",
+    "Un modelo que representa los permisos que tienen los sujetos sobre los objetos del sistema.",
+    "Un algoritmo de cifrado usado para proteger contraseñas dentro del sistema.",
+    "Una tabla que registra únicamente la velocidad de lectura y escritura de los discos."], c:1},
+{q:"¿Qué componente suele considerarse el núcleo central de un sistema operativo por su cercanía con el hardware?",
+ o:["El kernel o núcleo.","El editor de texto.","El explorador de archivos.","El navegador web."], c:0},
+{q:"¿Qué significan confidencialidad, integridad y disponibilidad?",
+ o:["Confidencialidad es compartir todo, integridad es duplicar datos y disponibilidad es restringir siempre el acceso.",
+    "Confidencialidad es borrar datos, integridad es comprimir archivos y disponibilidad es apagar servicios.",
+    "Confidencialidad es usar firewall, integridad es usar antivirus y disponibilidad es usar contraseñas largas.",
+    "Confidencialidad es acceso solo autorizado; integridad es evitar alteraciones indebidas; disponibilidad es mantener recursos accesibles."], c:3},
+{q:"¿Qué es un ataque de denegación de servicio?",
+ o:["Un método de cifrado que impide leer datos sin la clave correcta.",
+    "Un proceso de autenticación que solicita dos factores al usuario.",
+    "Un ataque que busca saturar o interrumpir un servicio para impedir el acceso de usuarios legítimos.",
+    "Una técnica de respaldo que protege archivos ante fallos del sistema."], c:2},
+{q:"¿Qué significa montar un sistema de archivos?",
+ o:["Eliminar todas las particiones del disco para crear una nueva estructura.",
+    "Integrar un sistema de archivos a un punto del árbol de directorios para permitir su acceso.",
+    "Convertir un archivo secuencial en un archivo de acceso directo.",
+    "Copiar todos los archivos del disco hacia la memoria principal."], c:1},
+{q:"¿Por qué la arquitectura de un sistema informático es relevante para estudiar sistemas operativos?",
+ o:["Porque reemplaza completamente las funciones del hardware.",
+    "Porque evita que existan programas de usuario en el sistema.",
+    "Porque determina únicamente el color y apariencia del entorno gráfico.",
+    "Porque permite comprender cómo el sistema operativo interactúa con procesador, memoria, dispositivos y aplicaciones."], c:3},
+{q:"¿Qué es una amenaza del sistema o de la red?",
+ o:["Una situación, acción o vulnerabilidad que puede afectar la confidencialidad, integridad o disponibilidad de recursos del sistema o la red.",
+    "Una estructura de datos usada para organizar archivos dentro de un directorio.",
+    "Un método normal de planificación de procesos en sistemas multiprocesador.",
+    "Una técnica de compresión usada para reducir el tamaño de los archivos."], c:0},
+{q:"¿Qué es la segmentación de memoria?",
+ o:["La división de la memoria física en bloques iguales llamados marcos.",
+    "La transferencia directa de datos entre dispositivos sin intervención de la CPU.",
+    "El almacenamiento permanente de archivos en sectores consecutivos del disco.",
+    "La organización de la memoria en unidades lógicas de tamaño variable, como código, datos y pila."], c:3},
+{q:"¿Qué ocurre cuando se produce una falla de página?",
+ o:["El sistema operativo localiza la página requerida en el almacenamiento secundario y la carga en memoria.",
+    "El proceso termina inmediatamente porque el sistema operativo no puede continuar.",
+    "La CPU convierte automáticamente la página faltante en un segmento de memoria.",
+    "El controlador de pantalla reinicia la interfaz gráfica del usuario."], c:0},
+{q:"¿Qué representan los sujetos, objetos y permisos en una matriz de acceso?",
+ o:["Los sujetos son archivos, los objetos son contraseñas y los permisos son direcciones IP.",
+    "Los sujetos son dispositivos físicos, los objetos son cables de red y los permisos son señales eléctricas.",
+    "Los sujetos son algoritmos de cifrado, los objetos son claves públicas y los permisos son hashes.",
+    "Los sujetos son usuarios o procesos, los objetos son recursos protegidos y los permisos son acciones autorizadas."], c:3},
+{q:"¿Cuál de las siguientes opciones describe mejor la estructura de un sistema operativo?",
+ o:["Un conjunto de documentos técnicos usados para instalar programas.",
+    "Una colección de periféricos conectados a la computadora.",
+    "El almacenamiento exclusivo de archivos personales del usuario.",
+    "La organización interna de componentes como núcleo, servicios, controladores, sistema de archivos e interfaz."], c:3},
+{q:"¿Qué información puede administrar un directorio dentro del sistema de archivos?",
+ o:["Los nombres de archivos, rutas, atributos, permisos, fechas y referencias de ubicación.",
+    "Solamente la temperatura del procesador y la velocidad de los ventiladores.",
+    "Solo las direcciones IP de los dispositivos conectados.",
+    "Únicamente los algoritmos de planificación de CPU."], c:0},
+{q:"¿Qué es el acceso secuencial a un archivo?",
+ o:["Un procedimiento exclusivo para montar discos externos.",
+    "Una técnica que cifra automáticamente cada bloque del archivo.",
+    "Un método en el que los datos se procesan en orden, desde el inicio hacia el final.",
+    "Un método que permite leer cualquier posición del archivo sin recorrer datos anteriores."], c:2},
+{q:"¿Qué es la protección en un sistema operativo?",
+ o:["Un procedimiento usado solo para mejorar la velocidad de arranque del computador.",
+    "Una técnica que cifra todos los archivos sin diferenciar usuarios ni permisos.",
+    "Un mecanismo encargado únicamente de instalar actualizaciones automáticas del sistema.",
+    "El conjunto de mecanismos que regulan el acceso de usuarios y procesos a los recursos del sistema."], c:3},
+{q:"¿Qué es la E/S programada?",
+ o:["Una técnica exclusiva para cifrar archivos almacenados en disco.",
+    "Un procedimiento de sustitución de páginas usado por la memoria virtual.",
+    "Un mecanismo en el que la CPU participa activamente verificando el estado del dispositivo y transfiriendo datos.",
+    "Un método en el que el dispositivo transfiere datos directamente a memoria sin intervención de la CPU."], c:2},
+{q:"¿Por qué es necesario montar un sistema de archivos antes de acceder a sus datos?",
+ o:["Porque el montaje reemplaza al sistema operativo durante la lectura de archivos.",
+    "Porque sin montaje los archivos se eliminan automáticamente del dispositivo.",
+    "Porque el sistema operativo debe reconocer su estructura e integrarla para poder leer y administrar sus contenidos.",
+    "Porque el montaje convierte la memoria RAM en almacenamiento permanente."], c:2},
+{q:"¿En qué tipo de aplicación resulta especialmente útil el uso de hilos?",
+ o:["En un archivo de texto que permanece almacenado sin ejecutarse.",
+    "En una carpeta del sistema operativo que solo agrupa archivos.",
+    "En un navegador web que descarga contenido, reproduce multimedia y mantiene activa la interfaz al mismo tiempo.",
+    "En una aplicación que solo ejecuta una instrucción y finaliza inmediatamente."], c:2},
+{q:"¿Qué es la memoria virtual?",
+ o:["Un área permanente del disco donde se guardan solamente archivos multimedia.",
+    "Un tipo de memoria exclusiva del monitor para representar imágenes.",
+    "Una memoria física adicional instalada en la placa base para duplicar la RAM.",
+    "Una técnica que permite a los procesos usar un espacio de direcciones mayor o independiente de la memoria física disponible."], c:3},
+{q:"¿Cuál es la diferencia principal entre un proceso y un hilo?",
+ o:["El proceso solo puede ejecutarse en sistemas monousuario, mientras que el hilo solo existe en sistemas multiusuario.",
+    "El proceso es una unidad secundaria de ejecución, mientras que el hilo administra la memoria virtual.",
+    "El proceso posee su propio espacio de memoria, mientras que los hilos de un mismo proceso comparten recursos como memoria y archivos abiertos.",
+    "El hilo siempre requiere más memoria que un proceso porque contiene todos los recursos del sistema operativo."], c:2},
+{q:"¿Cuál de las siguientes es una operación fundamental de un sistema operativo?",
+ o:["Eliminar la necesidad de hardware en el computador.",
+    "Diseñar físicamente los circuitos del procesador.",
+    "Crear automáticamente todos los programas de aplicación.",
+    "Administrar procesos, memoria, archivos y dispositivos de entrada/salida."], c:3},
+{q:"¿Cuál es la función principal de la interfaz de usuario de un sistema operativo?",
+ o:["Ejecutar instrucciones eléctricas directamente en la memoria RAM.",
+    "Eliminar la necesidad de controladores de dispositivos.",
+    "Permitir la interacción entre el usuario y los servicios del sistema operativo.",
+    "Reemplazar físicamente al procesador."], c:2},
+{q:"¿Qué función cumple la memoria principal en un sistema operativo?",
+ o:["Almacenar permanentemente todos los archivos del usuario, incluso cuando el equipo está apagado.",
+    "Almacenar temporalmente los programas y datos que necesita la CPU durante la ejecución.",
+    "Ejecutar directamente los programas desde el disco duro sin cargarlos en memoria.",
+    "Sustituir al procesador en la ejecución de instrucciones aritméticas y lógicas."], c:1},
+{q:"¿Cuál es la diferencia entre los algoritmos FIFO y LRU en la sustitución de páginas?",
+ o:["FIFO reemplaza la página más usada y LRU reemplaza siempre la más nueva.",
+    "FIFO reemplaza la página que ingresó primero; LRU reemplaza la página menos recientemente utilizada.",
+    "FIFO solo funciona con segmentación y LRU solo con asignación contigua.",
+    "FIFO evita todas las fallas de página, mientras que LRU las provoca intencionalmente."], c:1},
+{q:"¿Por qué es importante asignar correctamente los marcos de página a los procesos?",
+ o:["Porque una mala asignación puede aumentar las fallas de página y degradar el rendimiento del sistema.",
+    "Porque obliga a que todos los procesos ocupen memoria contigua.",
+    "Porque evita que el sistema operativo tenga que usar controladores de dispositivo.",
+    "Porque permite que todos los procesos se ejecuten sin utilizar CPU."], c:0},
+{q:"Cuando un sistema operativo decide qué proceso utilizará la CPU en un momento determinado, está realizando una operación relacionada con:",
+ o:["La edición de documentos.","La configuración del monitor.","La gestión y planificación de procesos.","La compresión física del disco duro."], c:2},
+{q:"¿Cuál de las siguientes opciones representa correctamente una ventaja y una desventaja del uso de hilos?",
+ o:["Ventaja: permiten concurrencia eficiente; desventaja: pueden generar problemas de sincronización si comparten datos.",
+    "Ventaja: eliminan las condiciones de carrera; desventaja: impiden el uso de memoria compartida.",
+    "Ventaja: aíslan completamente la memoria; desventaja: no pueden comunicarse entre sí.",
+    "Ventaja: sustituyen al sistema operativo; desventaja: solo funcionan en aplicaciones de consola."], c:0},
+{q:"¿Qué son los dispositivos de entrada y salida?",
+ o:["Componentes de hardware que permiten la comunicación entre el computador y el entorno externo.",
+    "Segmentos de memoria usados exclusivamente por los compiladores.",
+    "Archivos temporales que almacenan instrucciones de los procesos.",
+    "Programas internos que sustituyen al kernel en la administración de memoria."], c:0},
+{q:"¿Cuál es un ejemplo realista del uso de hilos en una aplicación del sistema?",
+ o:["Un archivo comprimido que permanece guardado sin abrirse.",
+    "Un administrador de archivos que copia datos mientras mantiene activa la interfaz de usuario.",
+    "Una tabla impresa sin interacción con el sistema.",
+    "Una imagen estática almacenada en una carpeta."], c:1},
+{q:"¿Qué es la paginación bajo demanda?",
+ o:["Una técnica que carga todos los programas completos en memoria antes de iniciar su ejecución.",
+    "Un método para asignar memoria únicamente en bloques contiguos de tamaño variable.",
+    "Una técnica que carga en memoria solo las páginas que el proceso necesita durante su ejecución.",
+    "Un mecanismo para eliminar la tabla de páginas y acelerar el acceso al disco."], c:2},
+{q:"¿Qué es el intercambio o swapping en la gestión de memoria?",
+ o:["La conversión automática de memoria física en memoria caché del procesador.",
+    "El traslado temporal de procesos o partes de ellos entre la memoria principal y el almacenamiento secundario.",
+    "El proceso de eliminar definitivamente programas inactivos del sistema operativo.",
+    "La división de un archivo en bloques para guardarlo de forma contigua en el disco."], c:1},
+{q:"¿Cuál ejemplo corresponde mejor a un sistema operativo de propósito general?",
+ o:["GNU/Linux instalado en una computadora personal para ejecutar aplicaciones diversas.",
+    "El firmware específico de una lavadora inteligente.",
+    "Un sistema embebido dedicado al control de frenos ABS.",
+    "Un controlador interno de una impresora."], c:0},
+{q:"¿Por qué el sistema operativo necesita una interfaz uniforme de entrada/salida?",
+ o:["Para ocultar las diferencias entre dispositivos y ofrecer operaciones comunes como abrir, leer, escribir y cerrar.",
+    "Para impedir que las aplicaciones accedan a archivos del usuario.",
+    "Para eliminar la necesidad de controladores en todos los dispositivos.",
+    "Para que todos los dispositivos tengan exactamente la misma velocidad física."], c:0},
+{q:"¿Cuál es la diferencia entre fragmentación interna y fragmentación externa?",
+ o:["La fragmentación interna ocurre en el disco y la externa únicamente en la memoria caché.",
+    "La interna es espacio desperdiciado dentro de un bloque asignado; la externa son huecos libres separados entre bloques asignados.",
+    "La fragmentación interna elimina procesos; la externa comprime archivos del sistema.",
+    "La interna afecta solo al kernel; la externa afecta únicamente a dispositivos de entrada y salida."], c:1},
+{q:"¿Qué es la criptografía?",
+ o:["Un mecanismo para organizar archivos dentro de carpetas y subcarpetas.",
+    "Un algoritmo de planificación que asigna CPU a procesos críticos.",
+    "Una herramienta exclusiva para detectar fallas de hardware en dispositivos de entrada y salida.",
+    "El conjunto de técnicas que permite proteger información mediante cifrado, claves y funciones matemáticas."], c:3},
+{q:"¿Cuáles son modelos clásicos de relación entre hilos de usuario y hilos de kernel?",
+ o:["FIFO, LIFO y Round Robin.","Muchos a uno, uno a uno y muchos a muchos.","Monousuario, multiusuario y distribuido.","Secuencial, condicional e iterativo."], c:1},
+{q:"¿Por qué los hilos son importantes en los sistemas operativos modernos?",
+ o:["Porque impiden la ejecución concurrente de tareas.",
+    "Porque hacen innecesaria la memoria principal.",
+    "Porque permiten multitarea eficiente, mejor respuesta de aplicaciones y aprovechamiento de procesadores multinúcleo.",
+    "Porque reemplazan completamente al hardware del procesador."], c:2},
+{q:"¿Cuál opción representa mejor el concepto de arquitectura de un sistema informático?",
+ o:["El procedimiento para instalar un sistema operativo.",
+    "El diseño visual de la interfaz gráfica del sistema.",
+    "La estructura integrada de hardware, software, datos, redes y mecanismos de interacción que permiten el funcionamiento del sistema.",
+    "La lista de aplicaciones instaladas en un equipo."], c:2},
+{q:"¿En qué se diferencia la segmentación de la paginación?",
+ o:["La segmentación solo se usa en discos externos y la paginación solo en impresoras.",
+    "La segmentación usa bloques fijos y la paginación usa unidades lógicas variables.",
+    "La segmentación usa unidades lógicas de tamaño variable, mientras que la paginación usa bloques de tamaño fijo.",
+    "La segmentación elimina la necesidad de protección de memoria, mientras que la paginación no."], c:2},
+{q:"¿Qué se entiende por modelo multihilo en sistemas operativos?",
+ o:["Un método para guardar varios programas en una única carpeta del sistema.",
+    "Una técnica exclusiva para duplicar archivos ejecutables en memoria secundaria.",
+    "Una forma de organizar la relación entre hilos de usuario y hilos del kernel para ejecutar tareas concurrentes.",
+    "Un algoritmo usado únicamente para ordenar procesos por tamaño de archivo."], c:2},
+{q:"¿Qué es la autenticación de usuarios?",
+ o:["El mecanismo que decide qué página debe sustituirse en memoria.",
+    "El proceso mediante el cual el sistema verifica la identidad de un usuario antes de permitirle acceder.",
+    "El proceso de asignar memoria física a cada página de un proceso.",
+    "La técnica que organiza archivos en un árbol de directorios."], c:1},
+{q:"¿Qué es un virus informático?",
+ o:["Una regla de firewall que bloquea paquetes de red no autorizados.",
+    "Un programa malicioso que se adjunta a archivos o programas y puede replicarse al ejecutarse.",
+    "Un error físico del procesador que impide ejecutar instrucciones.",
+    "Una falla de página que ocurre cuando un proceso no encuentra una página en memoria."], c:1},
+{q:"¿Cuál elemento participa normalmente en las primeras etapas del arranque de una computadora?",
+ o:["Una hoja de cálculo almacenada en documentos.",
+    "El firmware del equipo, como BIOS o UEFI.",
+    "Un procesador de texto abierto por el usuario.",
+    "Un navegador web con varias pestañas activas."], c:1},
+{q:"¿Cómo manejan generalmente los sistemas operativos modernos los hilos?",
+ o:["Los eliminan para evitar la multitarea.",
+    "Los ejecutan sin relación con procesos ni memoria.",
+    "Los tratan únicamente como archivos almacenados en disco.",
+    "Los reconocen como unidades planificables de ejecución y los administran mediante el kernel y el planificador."], c:3},
+{q:"¿Cómo se relacionan los hilos con el rendimiento del equipo?",
+ o:["Una gestión adecuada de hilos puede mejorar la utilización de CPU, la capacidad de respuesta y el paralelismo en equipos multinúcleo.",
+    "Los hilos solo afectan el rendimiento cuando no existe sistema operativo.",
+    "Los hilos reducen obligatoriamente el uso de todos los recursos del sistema.",
+    "Cada hilo aumenta siempre el rendimiento sin importar la cantidad de recursos disponibles."], c:0},
+{q:"¿Qué se entiende por entorno informático en el contexto de sistemas operativos?",
+ o:["La marca comercial del procesador instalado.",
+    "El lugar físico donde se guarda una computadora apagada.",
+    "El conjunto de hardware, software, usuarios, redes y condiciones de uso donde opera el sistema.",
+    "La cantidad de colores disponibles en la interfaz gráfica."], c:2},
+{q:"En una computadora, ¿qué elemento cumple la función principal de ejecutar instrucciones y coordinar operaciones básicas de procesamiento?",
+ o:["El sistema de archivos.","La memoria secundaria.","El monitor del sistema.","La unidad central de procesamiento."], c:3},
+{q:"¿Cuál de las siguientes opciones describe mejor un sistema operativo de propósito general?",
+ o:["Un sistema diseñado exclusivamente para controlar un cajero automático.",
+    "Un sistema capaz de ejecutar múltiples tipos de aplicaciones y atender diversas necesidades de usuario.",
+    "Un software que funciona únicamente sin interacción humana.",
+    "Un programa que solo permite operaciones matemáticas básicas."], c:1},
+{q:"¿Qué describe mejor el arranque del sistema operativo?",
+ o:["La conexión de un monitor externo después de iniciar sesión.",
+    "La eliminación automática de archivos temporales del usuario.",
+    "El proceso mediante el cual el equipo inicializa hardware, localiza el cargador de arranque y carga el sistema operativo en memoria.",
+    "La instalación manual de todas las aplicaciones de oficina."], c:2},
+{q:"¿Por qué el uso de hilos puede mejorar el rendimiento de una aplicación?",
+ o:["Porque permite dividir tareas en flujos de ejecución concurrentes que pueden aprovechar mejor el tiempo de CPU y la capacidad de respuesta.",
+    "Porque elimina por completo la necesidad de planificación del procesador.",
+    "Porque convierte automáticamente cualquier programa en un sistema distribuido.",
+    "Porque impide que dos tareas se ejecuten de manera concurrente."], c:0},
+{q:"¿Cuál situación evidencia mejor la influencia del entorno informático sobre el sistema operativo?",
+ o:["Ordenar alfabéticamente los accesos directos del escritorio.",
+    "Usar una imagen decorativa como fondo de escritorio.",
+    "Cambiar el color de una carpeta sin modificar permisos.",
+    "Seleccionar un sistema operativo de servidor por sus necesidades de red, seguridad y concurrencia."], c:3},
+{q:"¿Qué es la seguridad en un sistema operativo?",
+ o:["La capacidad de proteger el sistema frente a accesos no autorizados, ataques, fallos y alteraciones.",
+    "La técnica que permite montar unidades externas automáticamente.",
+    "La organización de archivos en directorios y subdirectorios.",
+    "La capacidad del sistema para ejecutar más procesos sin usar memoria virtual."], c:0},
+{q:"¿Qué es el control de acceso?",
+ o:["El procedimiento de convertir archivos secuenciales en archivos de acceso directo.",
+    "El proceso de aumentar automáticamente la memoria disponible para cada proceso.",
+    "La técnica que reemplaza páginas antiguas cuando no hay marcos libres.",
+    "El mecanismo mediante el cual el sistema verifica si un sujeto tiene permiso para usar un recurso."], c:3},
+{q:"¿Por qué el sistema operativo necesita sustituir páginas en memoria?",
+ o:["Porque cuando no hay marcos libres, debe retirar una página residente para cargar otra requerida.",
+    "Porque la memoria virtual elimina automáticamente las tablas de páginas.",
+    "Porque todos los procesos deben tener exactamente una sola página activa.",
+    "Porque las páginas siempre deben almacenarse en memoria contigua."], c:0},
+{q:"¿Cuál afirmación describe correctamente el modelo muchos a uno?",
+ o:["Cada proceso se convierte automáticamente en un sistema multiprocesador.",
+    "Varios hilos de usuario se asignan a un único hilo del kernel.",
+    "Un único hilo de usuario se divide en varios procesos independientes.",
+    "Cada hilo de usuario se asigna a un hilo diferente del kernel."], c:1},
+{q:"¿Qué diferencia existe entre hilos de usuario e hilos de kernel?",
+ o:["Los hilos de kernel solo se usan en aplicaciones web, mientras que los de usuario solo se usan en videojuegos.",
+    "Los hilos de usuario no pertenecen a procesos, mientras que los hilos de kernel sí son procesos completos.",
+    "Los hilos de usuario son gestionados principalmente por bibliotecas en espacio de usuario, mientras que los hilos de kernel son gestionados directamente por el sistema operativo.",
+    "Los hilos de usuario son dispositivos físicos, mientras que los hilos de kernel son archivos del sistema."], c:2},
+{q:"¿Qué diferencia existe entre E/S por interrupciones y acceso directo a memoria o DMA?",
+ o:["La E/S por interrupciones elimina la CPU; DMA obliga a la CPU a transferir cada byte manualmente.",
+    "La E/S por interrupciones se usa solo en archivos de texto; DMA se usa solo en directorios.",
+    "La E/S por interrupciones avisa a la CPU cuando el dispositivo requiere atención; DMA permite transferencias directas entre dispositivo y memoria.",
+    "Ambas técnicas son idénticas y solo cambian el nombre según el sistema operativo."], c:2},
+{q:"¿Qué problema puede aparecer cuando varios hilos se ejecutan al mismo tiempo y comparten datos?",
+ o:["Conversión de los hilos en archivos permanentes.",
+    "Fragmentación física del monitor.",
+    "Condiciones de carrera o inconsistencias por acceso concurrente a recursos compartidos.",
+    "Eliminación automática del sistema operativo."], c:2},
+{q:"¿Cuál de los siguientes ejemplos corresponde a una interfaz de línea de comandos?",
+ o:["Una pantalla táctil usada solo para dibujar imágenes.",
+    "Un administrador visual de ventanas.",
+    "Una terminal donde el usuario escribe instrucciones como cd, dir, ls o mkdir.",
+    "Un panel gráfico basado exclusivamente en iconos."], c:2},
+{q:"¿Qué es la asignación de memoria contigua?",
+ o:["La ubicación de cada proceso en un bloque continuo de memoria física.",
+    "La organización de la memoria en segmentos lógicos de tamaño variable.",
+    "La copia automática de todos los procesos desde la RAM hacia el disco.",
+    "La división del proceso en páginas de tamaño fijo ubicadas en marcos dispersos."], c:0},
+{q:"¿Qué son los marcos de página?",
+ o:["Registros internos de la CPU utilizados para guardar direcciones de red.",
+    "Bloques de memoria física de tamaño fijo donde se cargan las páginas de los procesos.",
+    "Partes variables del programa definidas por el compilador.",
+    "Archivos ocultos que almacenan copias de seguridad del sistema operativo."], c:1},
+{q:"¿Qué describe mejor a un hilo en el contexto de los sistemas operativos?",
+ o:["Una unidad básica de ejecución dentro de un proceso que comparte recursos con otros hilos del mismo proceso.",
+    "Una unidad independiente de almacenamiento permanente administrada por el sistema de archivos.",
+    "Un programa completo almacenado en disco que aún no ha iniciado su ejecución.",
+    "Un componente físico del procesador encargado exclusivamente de ejecutar instrucciones aritméticas."], c:0},
+{q:"¿Qué problemas pueden presentarse si la memoria del kernel se gestiona de forma incorrecta?",
+ o:["Solo se desordenan los nombres de archivos del usuario.",
+    "Se eliminan automáticamente todos los dispositivos de entrada.",
+    "Únicamente se reduce el brillo de la pantalla.",
+    "Se pueden producir fallos del sistema, vulnerabilidades, corrupción de datos o pérdida de estabilidad."], c:3},
+{q:"¿Cuál es la diferencia entre criptografía simétrica, criptografía asimétrica y función hash?",
+ o:["La simétrica usa dos claves públicas, la asimétrica no usa claves y el hash permite recuperar el texto original.",
+    "La simétrica elimina contraseñas, la asimétrica borra archivos y el hash reemplaza el firewall.",
+    "La simétrica usa una misma clave para cifrar y descifrar; la asimétrica usa clave pública y privada; el hash genera una huella no reversible.",
+    "La simétrica se usa solo en impresoras, la asimétrica solo en monitores y el hash solo en teclados."], c:2},
+{q:"¿Qué es la interfaz de entrada/salida?",
+ o:["Un algoritmo que decide qué proceso usará la CPU primero.",
+    "Una tabla usada exclusivamente para sustituir páginas.",
+    "Una memoria especial que reemplaza el almacenamiento secundario.",
+    "El conjunto de mecanismos mediante los cuales el sistema operativo permite a los programas comunicarse con dispositivos."], c:3},
+{q:"¿Qué desafío es especialmente importante en los sistemas distribuidos?",
+ o:["Eliminar todos los mecanismos de seguridad.",
+    "Elegir el fondo de pantalla del escritorio.",
+    "Evitar completamente el uso de redes.",
+    "Coordinar comunicación, sincronización y disponibilidad entre equipos conectados."], c:3},
+{q:"¿Qué ventaja ofrece el multihilo frente a la ejecución estrictamente secuencial?",
+ o:["Garantiza que nunca existan errores lógicos en el programa.",
+    "Reduce a cero el uso de memoria principal.",
+    "Permite que varias actividades de una aplicación progresen de manera concurrente, mejorando respuesta y aprovechamiento del procesador.",
+    "Evita la intervención del sistema operativo en la ejecución."], c:2},
+{q:"¿Por qué son importantes las actualizaciones, copias de seguridad y registros del sistema?",
+ o:["Porque corrigen vulnerabilidades, permiten recuperar información y facilitan investigar eventos o incidentes.",
+    "Porque permiten que todos los usuarios trabajen con permisos administrativos.",
+    "Porque eliminan la necesidad de autenticar usuarios en el sistema operativo.",
+    "Porque sustituyen completamente al firewall y al control de acceso."], c:0},
+{q:"¿Cuál es la diferencia entre control de acceso discrecional, obligatorio y basado en roles?",
+ o:["El discrecional depende del hardware, el obligatorio depende del navegador y el basado en roles depende del tamaño del disco.",
+    "El discrecional permite que el propietario defina permisos; el obligatorio aplica políticas del sistema; el basado en roles asigna permisos según funciones.",
+    "El discrecional usa cifrado, el obligatorio usa contraseñas y el basado en roles solo usa antivirus.",
+    "El discrecional se usa solo en redes, el obligatorio solo en memoria RAM y el basado en roles solo en impresoras."], c:1},
+{q:"¿Para qué sirve la estructura de directorios en un sistema operativo?",
+ o:["Para controlar exclusivamente la velocidad del disco duro.",
+    "Para organizar archivos y subdirectorios de forma lógica dentro del sistema de archivos.",
+    "Para reemplazar la memoria virtual cuando la RAM se llena.",
+    "Para asignar directamente la CPU a los procesos en espera."], c:1}
+];
+
+/* ---------- CATEGORÍA 2: SO Avanzado (Hilos, Planificación, Sincronización) ---------- */
+const Q_SO_AVANZADO = [
+{q:"¿Qué es un hilo?",
+ o:["Unidad mínima de ejecución dentro de un proceso; comparte recursos del proceso pero tiene su propio contador de programa, registros y pila.",
+    "Un proceso independiente con su propio espacio de memoria totalmente aislado.",
+    "Un programa completo almacenado en disco esperando ejecución.",
+    "Un dispositivo de hardware que ejecuta instrucciones en paralelo."], c:0},
+{q:"Mencione los elementos privados de cada hilo.",
+ o:["Código del programa, datos globales y archivos abiertos.",
+    "Contador de programa (PC), conjunto de registros y pila (stack).",
+    "Dirección IP, puerto de red y buffer de E/S.",
+    "Memoria caché, disco duro y tarjeta gráfica."], c:1},
+{q:"¿Qué recursos comparten los hilos de un mismo proceso?",
+ o:["Código, datos globales, archivos abiertos, conexiones de red y heap.",
+    "Contador de programa, registros y pila.",
+    "Dirección de memoria virtual exclusiva de cada hilo.",
+    "Ninguno; cada hilo tiene sus propios recursos totalmente aislados."], c:0},
+{q:"Mencione la diferencia entre proceso e hilo.",
+ o:["Proceso y hilo son términos equivalentes, sin diferencia real.",
+    "El hilo tiene memoria propia aislada; el proceso comparte memoria con otros procesos.",
+    "Proceso: unidad aislada con memoria propia (cambio costoso). Hilo: unidad de ejecución que comparte memoria del proceso padre (cambio barato).",
+    "El proceso es más rápido de cambiar que el hilo porque no tiene contexto."], c:2},
+{q:"Mencione las ventajas de los hilos.",
+ o:["Aislamiento total de memoria y mayor seguridad frente a fallos.",
+    "Respuesta, compartición eficiente, economía (menor costo), escalabilidad en múltiples núcleos.",
+    "Eliminación completa de condiciones de carrera.",
+    "Menor consumo de CPU que cualquier proceso secuencial."], c:1},
+{q:"Mencione las desventajas de los hilos.",
+ o:["Mayor consumo de memoria que los procesos tradicionales.",
+    "Imposibilidad de ejecutarse en sistemas multinúcleo.",
+    "Condiciones de carrera, deadlock, inversión de prioridades, depuración compleja.",
+    "Necesidad obligatoria de un sistema operativo distribuido."], c:2},
+{q:"¿Por qué los hilos mejoran el rendimiento? (3 principios)",
+ o:["Eliminan por completo la necesidad de memoria RAM.",
+    "Paralelismo real en multicore, solapamiento de E/S y cómputo, menor overhead que procesos.",
+    "Convierten cualquier programa en un sistema distribuido automáticamente.",
+    "Evitan que el sistema operativo intervenga en la ejecución."], c:1},
+{q:"¿Cuál es la diferencia entre concurrencia y paralelismo?",
+ o:["Concurrencia y paralelismo son sinónimos exactos.",
+    "Concurrencia requiere múltiples núcleos; paralelismo funciona con uno solo.",
+    "Concurrencia: varias tareas progresan alternándose. Paralelismo: ejecución simultánea en múltiples núcleos.",
+    "Paralelismo es exclusivo de sistemas operativos distribuidos."], c:2},
+{q:"¿Cuál es el uso de hilos en navegadores?",
+ o:["Cada pestaña es un proceso aislado; dentro de cada uno hay hilos de UI, red y renderizado.",
+    "Todas las pestañas comparten un único hilo sin aislamiento.",
+    "Los navegadores no utilizan hilos, solo procesos independientes.",
+    "Cada clic del usuario crea un proceso nuevo del sistema operativo."], c:0},
+{q:"¿Qué es un modelo multihilo?",
+ o:["Es un algoritmo de sustitución de páginas en memoria virtual.",
+    "Define la correspondencia entre hilos de usuario (ULT) y de kernel (KLT).",
+    "Es la técnica para asignar direcciones IP a cada hilo.",
+    "Es un método de cifrado usado para proteger hilos en ejecución."], c:1},
+{q:"Mencione cuatro modelos multihilo.",
+ o:["FIFO, LRU, Round Robin y SJF.",
+    "Cliente-servidor, peer-to-peer, maestro-esclavo e híbrido.",
+    "Muchos a uno, uno a uno, muchos a muchos, dos niveles.",
+    "Monolítico, microkernel, híbrido y exokernel."], c:2},
+{q:"¿Cuál es la diferencia entre ULT y KLT?",
+ o:["ULT y KLT son idénticos en costo y comportamiento ante bloqueos.",
+    "ULT: gestión en espacio de usuario, eficientes pero un bloqueo bloquea todo. KLT: gestión por el SO, más costosos pero un bloqueo no afecta a otros.",
+    "ULT es gestionado por el kernel; KLT es gestionado por el usuario.",
+    "KLT no puede ejecutarse en sistemas multinúcleo."], c:1},
+{q:"¿Cuál es el modelo multihilo que usan Linux y Windows?",
+ o:["Muchos a uno (N:1), por simplicidad de implementación.",
+    "Muchos a muchos (M:N), por eficiencia máxima.",
+    "Uno a uno (1:1), por paralelismo real y respuesta.",
+    "Dos niveles, exclusivo de sistemas embebidos."], c:2},
+{q:"¿Cuál es la limitación del modelo Muchos a Uno?",
+ o:["Requiere hardware especializado no disponible en PC comunes.",
+    "No permite crear más de un hilo por proceso.",
+    "Genera un hilo de kernel por cada hilo de usuario, elevando el costo.",
+    "Cualquier hilo bloqueante suspende todo el proceso; no aprovecha multiprocesador. Fue usado en Green Threads de Java antiguo."], c:3},
+{q:"¿Cuál es la ventaja del modelo Muchos a Muchos frente a Uno a Uno?",
+ o:["Elimina completamente la necesidad de planificación de CPU.",
+    "Reduce a cero las condiciones de carrera entre hilos.",
+    "Mayor flexibilidad: muchos ULT sin límite de KLT, con paralelismo sin la sobrecarga del 1:1.",
+    "Permite que un solo hilo bloqueante detenga todo el sistema, mejorando la seguridad."], c:2},
+{q:"¿Qué es la planificación de CPU?",
+ o:["Es el proceso de asignar memoria física a cada proceso.",
+    "Selecciona qué proceso de la cola de listos ejecutar. Maximiza uso de CPU, rendimiento y equidad.",
+    "Es la técnica de sustituir páginas cuando no hay marcos libres.",
+    "Es el mecanismo que cifra los datos en tránsito entre procesos."], c:1},
+{q:"Mencione cuatro situaciones de planificación.",
+ o:["Creación, Suspensión, Reanudación, Terminación forzada.",
+    "Lectura, Escritura, Bloqueo, Desbloqueo.",
+    "Ejecución→Espera, Ejecución→Listo, Espera→Listo, Finalización.",
+    "Carga, Descarga, Intercambio, Compresión."], c:2},
+{q:"¿Cuál es la diferencia entre planificación apropiativa y no apropiativa?",
+ o:["Apropiativa nunca permite cambios de contexto; no apropiativa sí.",
+    "No apropiativa: el proceso mantiene la CPU hasta terminar o bloquearse. Apropiativa: el sistema operativo puede interrumpirlo.",
+    "No apropiativa solo existe en sistemas multiprocesador.",
+    "Ambas son idénticas, solo cambia el nombre según el fabricante."], c:1},
+{q:"¿Cómo funciona el algoritmo FCFS y cuál es su desventaja?",
+ o:["Ejecuta primero el proceso más corto; desventaja: inanición de procesos largos.",
+    "Usa un quantum fijo; desventaja: muchos cambios de contexto.",
+    "Por orden de llegada. Desventaja: efecto convoy (un proceso largo retrasa a los cortos).",
+    "Prioriza procesos críticos; desventaja: complejidad de implementación."], c:2},
+{q:"¿Cómo funciona el algoritmo SJF y cuál es su problema?",
+ o:["Ejecuta procesos en el orden en que llegaron. Problema: efecto convoy.",
+    "Ejecuta el proceso con menor tiempo estimado. Problema: inanición de procesos largos.",
+    "Usa turnos de tiempo fijo. Problema: sobrecarga de cambios de contexto.",
+    "Asigna CPU según prioridad fija. Problema: inversión de prioridades."], c:1},
+{q:"¿Cómo funciona el algoritmo Round Robin?",
+ o:["Ejecuta siempre el proceso más corto disponible en la cola.",
+    "Asigna la CPU al proceso que llegó primero, sin interrupciones.",
+    "Usa un quantum fijo. El rendimiento depende del quantum: muy pequeño → muchos cambios de contexto; muy grande → se comporta como FCFS.",
+    "Nunca interrumpe un proceso una vez que comienza su ejecución."], c:2},
+{q:"¿Cuáles son los criterios de planificación que deben maximizarse o minimizarse?",
+ o:["Maximizar: tiempo de espera. Minimizar: utilización de CPU.",
+    "Maximizar: cambios de contexto. Minimizar: throughput.",
+    "Ambos deben maximizarse simultáneamente sin excepción.",
+    "Maximizar: utilización de CPU, throughput. Minimizar: tiempo de espera, retorno, respuesta."], c:3},
+{q:"¿Cuál es el criterio más importante en sistemas interactivos frente a sistemas por lotes?",
+ o:["Interactivo: throughput. Lotes: tiempo de respuesta.",
+    "Ambos priorizan exclusivamente el tiempo de espera.",
+    "Interactivo: tiempo de respuesta. Lotes: throughput y tiempo de retorno.",
+    "Interactivo: uso de memoria. Lotes: velocidad de red."], c:2},
+{q:"¿Qué es un sistema multiprocesador?",
+ o:["Un sistema con una sola CPU que simula ejecución paralela.",
+    "Un conjunto de computadoras independientes sin comunicación entre sí.",
+    "Dos o más CPU/núcleos bajo control común. Evolucionó a multinúcleo (un solo chip).",
+    "Una técnica de compresión de memoria RAM."], c:2},
+{q:"¿Cuál es la diferencia entre SMP y AMP?",
+ o:["SMP: cualquier CPU ejecuta cualquier proceso. AMP: un procesador maestro gestiona el sistema y los demás solo ejecutan tareas de usuario.",
+    "SMP usa un procesador maestro; AMP permite que cualquier CPU ejecute cualquier proceso.",
+    "SMP y AMP son términos idénticos para el mismo diseño.",
+    "AMP solo funciona con un único núcleo físico."], c:0},
+{q:"¿Qué es la afinidad del procesador y qué tipos existen?",
+ o:["Es la capacidad de un hilo de ejecutarse en cualquier núcleo sin preferencia.",
+    "Es un algoritmo de cifrado entre núcleos de un procesador.",
+    "Es la temperatura máxima soportada por el procesador.",
+    "Tendencia a ejecutar un hilo en el mismo núcleo por caché. Tipos: blanda (intenta) y fuerte (anclado)."], c:3},
+{q:"¿Qué son Push Migration y Pull Migration?",
+ o:["Push y Pull son sinónimos del mismo mecanismo de intercambio de memoria.",
+    "Push: un monitor mueve procesos de núcleos cargados a ligeros. Pull: un núcleo sin trabajo 'jala' tareas de otro.",
+    "Push mueve datos entre disco y RAM; Pull mueve datos entre RAM y caché.",
+    "Ambos se refieren exclusivamente a la migración de archivos entre servidores."], c:1},
+{q:"¿Qué es la arquitectura NUMA?",
+ o:["Arquitectura donde todos los núcleos acceden a la memoria con la misma latencia.",
+    "Un tipo de memoria caché exclusiva para hilos de kernel.",
+    "Memoria no uniforme: acceso local rápido, remoto lento. El planificador debe ejecutar hilos cerca de sus datos.",
+    "Un protocolo de red para sincronizar procesadores remotos."], c:2},
+{q:"¿Qué son P-Cores y E-Cores?",
+ o:["P-Cores son núcleos físicos; E-Cores son núcleos virtuales simulados por software.",
+    "P-Cores: máxima potencia. E-Cores: mínimo consumo. El planificador asigna tareas intensivas a P-Cores y de fondo a E-Cores.",
+    "P-Cores solo existen en servidores; E-Cores solo en móviles.",
+    "Ambos tipos de núcleo tienen exactamente el mismo rendimiento y consumo."], c:1},
+{q:"¿Qué es la sincronización de procesos?",
+ o:["Es la técnica de asignar memoria contigua a cada proceso.",
+    "Es el proceso de traducir direcciones lógicas a físicas.",
+    "Mecanismos para controlar el acceso a recursos compartidos. Evita condiciones de carrera.",
+    "Es un algoritmo de planificación basado en prioridades."], c:2},
+{q:"Mencione tres requisitos de una solución a la sección crítica.",
+ o:["Paralelismo, escalabilidad, portabilidad.",
+    "Confidencialidad, integridad, disponibilidad.",
+    "Exclusión mutua, progreso, espera acotada.",
+    "Atomicidad, consistencia, durabilidad."], c:2},
+{q:"¿En qué consiste la solución de Peterson?",
+ o:["Un algoritmo de planificación de CPU basado en turnos fijos.",
+    "Algoritmo para dos procesos con flag[i] y turn. Garantiza exclusión mutua sin hardware especial.",
+    "Un mecanismo de cifrado para proteger secciones críticas.",
+    "Una técnica de sustitución de páginas en memoria virtual."], c:1},
+{q:"¿Cuáles son las ventajas y limitaciones de la solución de Peterson?",
+ o:["Ventajas: funciona con cualquier número de procesos. Limitaciones: requiere hardware especializado.",
+    "Ventajas: elimina la espera activa. Limitaciones: solo funciona en sistemas monoprocesador.",
+    "Ventajas: es el estándar en sistemas multinúcleo modernos. Limitaciones: ninguna relevante.",
+    "Ventajas: exclusión mutua, sencillo. Limitaciones: solo dos procesos, espera activa, no apto para muchos núcleos."], c:3},
+{q:"Mencione mecanismos de sincronización modernos usados en sistemas operativos actuales.",
+ o:["Únicamente el algoritmo de Peterson se usa en sistemas modernos.",
+    "Linux: mutex, semáforos. Windows: mutex, eventos, secciones críticas. También monitores.",
+    "Firewalls y antivirus son los mecanismos de sincronización principales.",
+    "La sincronización moderna se basa solo en el hardware, sin software."], c:1},
+{q:"¿Qué es un deadlock?",
+ o:["Es un error que ocurre cuando un proceso termina antes de tiempo.",
+    "Es la técnica utilizada para acelerar la ejecución de hilos concurrentes.",
+    "Dos o más hilos esperan recursos que posee el otro, sin avanzar. Se evita con prevención, detección o recuperación.",
+    "Es un tipo de ataque de denegación de servicio contra el sistema operativo."], c:2}
+];
+
+/* ---------- CATEGORÍA 3: Linux — Comandos (Examen práctico) ---------- */
+const Q_LINUX_COMANDOS = [
+{q:"¿Qué significa la sigla CLI?",
+ o:["Command Line Interface (Interfaz de Línea de Comandos).",
+    "Command Learning Interface (Interfaz de Aprendizaje de Comandos).",
+    "Core Learning Interface (Interfaz de Aprendizaje Esencial).",
+    "Core Line Interface (Interfaz de Línea Esencial)."], c:0},
+{q:"Los comandos en Linux distinguen entre mayúsculas y minúsculas. ¿Verdadero o Falso?",
+ o:["Verdadero.","Falso."], c:0},
+{q:"¿Qué comando muestra tu ubicación actual en el sistema de archivos?",
+ o:["pwd","cd","pd"], c:0},
+{q:"¿Cuál de las siguientes opciones NO es un ejemplo de una ruta absoluta?",
+ o:["/","Documents","/home/sysadmin"], c:1},
+{q:"¿Cuál de las siguientes NO es una ruta relativa?",
+ o:["Documents","home/sysadmin/Documents/School/Art","/home","Documents/Work"], c:2},
+{q:"Los caracteres .. (doble punto) se usan para representar:",
+ o:["El directorio actual.","Nada, no tiene un significado especial.","El directorio \u201chome\u201d de un usuario.","El directorio arriba del directorio actual."], c:3},
+{q:"El carácter . (punto) se usa para representar:",
+ o:["El directorio arriba del directorio actual.","Nada, no tiene un significado especial.","El directorio actual.","El directorio \u201chome\u201d de un usuario."], c:2},
+{q:"¿Cuál de los siguientes comandos creará un nuevo shell conectado como el usuario root?",
+ o:["su","sudo"], c:0},
+{q:"¿Cuál de las siguientes series de permisos tiene resaltados (en negrita) los permisos del PROPIETARIO?",
+ o:["<b>rw-</b>rw-r--","rw-<b>rw-</b>r--","rw-rw-<b>r--</b>","rw-rw-r--"], c:0},
+{q:"¿Cuál de las siguientes series de permisos tiene resaltados (en negrita) los permisos del GRUPO?",
+ o:["<b>rw-</b>rw-r--","rw-<b>rw-</b>r--","rw-rw-<b>r--</b>","rw-rw-r--"], c:1},
+{q:"¿Qué comando le permite al usuario cambiar los permisos de un archivo?",
+ o:["chperm","chown","perm","chmod"], c:3},
+{q:"¿Cuál de las siguientes series de permisos indica que el otro (resto de usuarios) solo tiene permiso de lectura?",
+ o:["rw-rw-r--","rw-r--rwx","r--r--r-x","rwxrw-r-x"], c:0},
+{q:"¿Cuál de los siguientes comandos se usa para cambiar la propiedad (dueño) de un archivo?",
+ o:["chow","chmod","chown","chperm"], c:2},
+{q:"¿Cuál de los siguientes comandos puede usarse para renombrar un archivo?",
+ o:["mv","rn","cp","name"], c:0},
+{q:"El comando mv requiere al menos dos argumentos. ¿Verdadero o Falso?",
+ o:["Falso","Verdadero"], c:1},
+{q:"¿Qué comando se puede utilizar para copiar un archivo?",
+ o:["cp","mv","rm","touch"], c:0},
+{q:"¿Qué comando es utilizado para copiar archivos a nivel de bits?",
+ o:["dd","cp"], c:0},
+{q:"El comando rm requiere al menos dos argumentos. ¿Verdadero o Falso?",
+ o:["Falso","Verdadero"], c:0},
+{q:"¿Qué opción del comando rm permitirá a los usuarios borrar directorios?",
+ o:["-r","-a","-d","-i"], c:0},
+{q:"¿Cuál de los siguientes comandos regresará solo líneas que comiencen con 'test'?",
+ o:["grep '$test' file.txt","grep '*test' file.txt","grep '[test]' file.txt","grep '^test' file.txt"], c:3},
+{q:"¿Cuál de las siguientes líneas NO será devuelta por el comando grep '[^0-9]' file.txt ?",
+ o:["My favorite food is avocados.","I am 37 years old.","Hello my name is Joe.","3121991"], c:3},
+{q:"¿Cuál de las siguientes líneas será entregada por el comando grep 'p[oe]t' file.txt ?",
+ o:["pet","poet","poot","peet"], c:0},
+{q:"¿Cuál de los siguientes comandos puede ser usado para mostrar la información de configuración de red?",
+ o:["netconfig","ifconfig","net","pwd"], c:1},
+{q:"¿Cuál de los siguientes comandos muestra todos los procesos?",
+ o:["ps -a","ps --all","ps","ps -e"], c:3},
+{q:"¿Cuál de los siguientes comandos actualizará todos los paquetes instalados?",
+ o:["apt-get search","apt-get install","apt-get upgrade","apt-get update"], c:2},
+{q:"¿Cuál de los siguientes comandos borrará todos los archivos de configuración de un paquete?",
+ o:["apt-get trash","apt-get purge","apt-get delete","apt-get remove"], c:1},
+{q:"Los usuarios pueden actualizar sus propias contraseñas. ¿Verdadero o Falso?",
+ o:["Falso","Verdadero"], c:1},
+{q:"¿Qué opción del comando passwd se puede utilizar para ver información sobre el estado de la contraseña del usuario actual?",
+ o:["-l","-S","-i","-a"], c:1}
+];
+
+/* ---------- CATEGORÍA 4: Linux — Fundamentos (Guía Integral) ---------- */
+const Q_LINUX_FUNDAMENTOS = [
+{q:"¿Qué significa la sigla CLI y por qué se considera más eficiente que la GUI para administración?",
+ o:["Command Line Interface: más eficiente que la GUI para tareas de administración y solución de problemas.",
+    "Control Logic Interface: un módulo de hardware para gestionar interrupciones.",
+    "Client Local Interface: la conexión entre un cliente remoto y el servidor.",
+    "Central Login Interface: el sistema de autenticación gráfico de Linux."], c:0},
+{q:"En el contexto de Linux, ¿qué significa que sea un sistema de \u201ccódigo abierto\u201d?",
+ o:["Verdadero: permite a cualquier usuario ver, modificar y distribuir su código fuente.",
+    "Falso: el código fuente de Linux nunca es accesible para los usuarios.",
+    "Falso: solo las empresas que pagan licencias pueden ver el código.",
+    "Verdadero, pero solo Linus Torvalds puede modificar el código."], c:0},
+{q:"¿Qué hace el comando pwd?",
+ o:["Muestra la ruta absoluta de tu ubicación actual en el sistema de archivos (print working directory).",
+    "Cambia la contraseña del usuario actual.",
+    "Imprime la lista de procesos en ejecución.",
+    "Copia el directorio actual a otra ubicación."], c:0},
+{q:"¿Para qué se utiliza el comando cd?",
+ o:["Para navegar y cambiar entre los diferentes directorios del sistema (change directory).",
+    "Para crear un nuevo directorio vacío.",
+    "Para eliminar un directorio y su contenido.",
+    "Para comprimir un directorio en un archivo .zip."], c:0},
+{q:"Al ejecutar 'cd Documents', ¿qué tipo de ruta se está utilizando?",
+ o:["Una ruta relativa dentro del directorio actual.",
+    "Una ruta absoluta desde la raíz del sistema.",
+    "Un enlace simbólico hacia otro disco.",
+    "Una variable de entorno del sistema."], c:0},
+{q:"¿Qué símbolo representa el directorio \u201chome\u201d de un usuario y qué contiene?",
+ o:["La tilde (~); es el lugar donde los usuarios normales almacenan sus archivos personales y configuraciones.",
+    "El símbolo (#); contiene los archivos del sistema operativo.",
+    "El símbolo (@); contiene los archivos temporales del sistema.",
+    "El símbolo (&); contiene los archivos compartidos entre usuarios."], c:0},
+{q:"En rutas relativas, ¿qué representa un solo punto (.)?",
+ o:["El directorio actual.","El directorio padre (un nivel arriba).","El directorio home del usuario.","La raíz del sistema de archivos."], c:0},
+{q:"¿Qué hace el comando ls?",
+ o:["Enlista los contenidos (archivos y subdirectorios) del directorio actual o de uno especificado.",
+    "Elimina archivos del directorio actual.",
+    "Muestra el uso de memoria del sistema.",
+    "Cambia los permisos de todos los archivos listados."], c:0},
+{q:"En un listado largo (ls -l), ¿qué indica el primer carácter de la línea?",
+ o:["El tipo de archivo: ordinario (-), directorio (d) o enlace simbólico (l).",
+    "El tamaño exacto del archivo en bytes.",
+    "El nombre del propietario del archivo.",
+    "La fecha de la última modificación."], c:0},
+{q:"¿Qué hace el comando su y qué significa?",
+ o:["'Set user': permite a un usuario normal adquirir temporalmente los privilegios de otro usuario, comúnmente root.",
+    "'Show usage': muestra el uso de CPU y memoria del sistema.",
+    "'Stop unit': detiene un servicio del sistema.",
+    "'Sync users': sincroniza las cuentas de usuario entre servidores."], c:0},
+{q:"En los permisos -rw-rw-r--, ¿qué privilegios tienen el propietario, el grupo y otros usuarios?",
+ o:["Propietario y grupo: lectura y escritura (rw-); otros: solo lectura (r--).",
+    "Propietario: solo lectura; grupo y otros: lectura y escritura.",
+    "Todos (propietario, grupo, otros) tienen los mismos permisos de ejecución.",
+    "Propietario y grupo: solo ejecución; otros: sin permisos."], c:0},
+{q:"¿El usuario root tiene restricciones para realizar acciones en el sistema?",
+ o:["No: el usuario root tiene acceso total y puede realizar cualquier acción sin restricciones.",
+    "Sí: root tiene las mismas restricciones que cualquier usuario normal.",
+    "Sí: root solo puede leer archivos, no modificarlos.",
+    "Sí: root necesita sudo incluso para sus propias acciones."], c:0},
+{q:"¿Qué comando se utiliza para copiar archivos o directorios?",
+ o:["cp, requiriendo un origen y un destino.",
+    "mv, que mueve el archivo sin dejar copia en el origen.",
+    "ln, que crea un enlace simbólico al archivo.",
+    "dd, que solo copia a nivel de bits en discos completos."], c:0},
+{q:"¿Los archivos borrados con el comando rm se pueden recuperar fácilmente?",
+ o:["No: normalmente desaparecen de forma permanente y no se pueden restaurar fácilmente.",
+    "Sí: siempre se pueden recuperar desde una papelera de reciclaje automática.",
+    "Sí: se recuperan automáticamente reiniciando el sistema.",
+    "Sí: se guardan indefinidamente en /tmp para su restauración."], c:0},
+{q:"¿Las extensiones de archivo (como .txt) son obligatorias en Linux?",
+ o:["No: las extensiones no son obligatorias ni determinan estrictamente el tipo de archivo, a diferencia de otros sistemas operativos.",
+    "Sí: sin extensión, Linux no puede abrir ningún archivo.",
+    "Sí: el sistema operativo asigna la extensión automáticamente.",
+    "No: las extensiones solo funcionan en el escritorio gráfico."], c:0},
+{q:"¿Qué opción de recursividad se usa con comandos como rm o cp para afectar un directorio completo?",
+ o:["-r, que aplica el comando de forma recursiva a un directorio y todo su contenido.",
+    "-a, que solo muestra archivos ocultos.",
+    "-v, que activa el modo detallado (verbose).",
+    "-f, que fuerza la operación sin confirmar."], c:0},
+{q:"¿Qué hace el comando grep 'test$' file.txt?",
+ o:["Busca líneas en el archivo que terminen exactamente con la palabra 'test' (el símbolo $ ancla el final de línea).",
+    "Busca líneas que comiencen con la palabra 'test'.",
+    "Reemplaza la palabra 'test' por un espacio en blanco.",
+    "Cuenta cuántas veces aparece la palabra 'test' en el archivo."], c:0},
+{q:"¿En qué año Linus Torvalds comenzó a programar Linux?",
+ o:["1991, siendo estudiante de la Universidad de Helsinki.",
+    "1983, junto con el proyecto GNU de Richard Stallman.",
+    "1969, en los laboratorios Bell junto con UNIX.",
+    "2001, con el lanzamiento del kernel 2.4."], c:0},
+{q:"¿Qué comando organiza el apagado o reinicio seguro del sistema?",
+ o:["shutdown","kill -9 1 (mata el proceso init)","exit, que solo cierra la sesión actual","rm -rf /, que borra todos los archivos del sistema"], c:0},
+{q:"¿Pueden los usuarios normales realizar tareas administrativas sin usar sudo o su?",
+ o:["No: los usuarios normales no pueden realizar tareas administrativas sin usar sudo o su.",
+    "Sí: cualquier usuario puede modificar archivos del sistema libremente.",
+    "Sí: solo se necesita reiniciar el sistema para obtener privilegios.",
+    "No: ningún usuario, ni siquiera root, puede realizar tareas administrativas."], c:0},
+{q:"¿Qué hace el comando apt-get upgrade?",
+ o:["Actualiza todos los paquetes instalados y sus dependencias a las versiones más recientes.",
+    "Elimina todos los paquetes instalados del sistema.",
+    "Instala un paquete nuevo especificado por el usuario.",
+    "Refresca únicamente la lista de repositorios disponibles."], c:0},
+{q:"¿Qué hace el comando apt-get purge?",
+ o:["Elimina un paquete completamente del sistema, incluyendo sus archivos de configuración.",
+    "Elimina un paquete pero conserva sus archivos de configuración.",
+    "Actualiza un paquete a su última versión disponible.",
+    "Instala las dependencias faltantes de un paquete."], c:0},
+{q:"¿Qué hace el comando apt-get update?",
+ o:["Refresca la lista de paquetes disponibles desde los repositorios para que el sistema sepa qué versiones nuevas existen.",
+    "Actualiza inmediatamente todos los paquetes instalados.",
+    "Elimina paquetes obsoletos del sistema.",
+    "Reinicia el gestor de paquetes APT."], c:0},
+{q:"¿Linux es un sistema operativo multiusuario?",
+ o:["Sí: permite que múltiples usuarios trabajen simultáneamente en el mismo sistema.",
+    "No: Linux solo permite un usuario activo a la vez.",
+    "No: el soporte multiusuario requiere una licencia adicional.",
+    "Sí, pero solo root puede iniciar sesión al mismo tiempo que otro usuario."], c:0},
+{q:"¿Cómo se llama el núcleo de Linux?",
+ o:["Kernel","Shell","GRUB","Daemon"], c:0},
+{q:"¿Qué opción del comando ls ordena los archivos por su tamaño?",
+ o:["-S","-t (ordena por fecha de modificación)","-r (invierte el orden del listado)","-h (muestra tamaños legibles, no ordena)"], c:0}
+];
+
+/* ============================================================
+   ESTRUCTURA DE MATERIAS
+   ============================================================ */
+const SUBJECTS = {
+  so: {
+    name: "Sistemas Operativos",
+    icon: "🖥️",
+    cls: "c-so",
+    desc: "Conceptos generales, hilos, planificación y sincronización",
+    topics: {
+      base: { name: "Conceptos Generales", data: Q_SO_BASE },
+      avanzado: { name: "Hilos y Planificación", data: Q_SO_AVANZADO }
+    }
+  },
+  linux: {
+    name: "Linux",
+    icon: "🐧",
+    cls: "c-linux",
+    desc: "Comandos, permisos, administración y fundamentos del sistema",
+    topics: {
+      comandos: { name: "Comandos (Examen práctico)", data: Q_LINUX_COMANDOS },
+      fundamentos: { name: "Fundamentos y Administración", data: Q_LINUX_FUNDAMENTOS }
+    }
+  }
+};
+
+/* ============================================================
+   ESTADO GLOBAL
+   ============================================================ */
+let currentSubjectKey = null;
+let selectedTopics = [];
+let quizQuestions = [];
+let currentIndex = 0;
+let userAnswers = [];
+let answered = false;
+let liveOk = 0, liveBad = 0;
+
+/* Estadísticas globales persistentes (solo en memoria de la sesión) */
+let globalStats = { done: 0, ok: 0 };
+
+function updateGlobalStatsUI(){
+  let total = 0;
+  Object.values(SUBJECTS).forEach(s => Object.values(s.topics).forEach(t => total += t.data.length));
+  document.getElementById('gstat-total').textContent = total;
+  document.getElementById('gstat-done').textContent = globalStats.done;
+  document.getElementById('gstat-acc').textContent = globalStats.done > 0
+    ? Math.round((globalStats.ok/globalStats.done)*100) + '%'
+    : '—';
+}
+
+/* ============================================================
+   RENDER: HOME
+   ============================================================ */
+function renderHome(){
+  const grid = document.getElementById('subject-grid');
+  grid.innerHTML = '';
+  Object.entries(SUBJECTS).forEach(([key, subj]) => {
+    let total = 0;
+    Object.values(subj.topics).forEach(t => total += t.data.length);
+    const card = document.createElement('div');
+    card.className = `subject-card ${subj.cls}`;
+    card.onclick = () => openSubject(key);
+    card.innerHTML = `
+      <div class="stripe"></div>
+      <div class="icon">${subj.icon}</div>
+      <h3>${subj.name}</h3>
+      <p>${subj.desc}</p>
+      <span class="count-pill">${total} preguntas</span>
+    `;
+    grid.appendChild(card);
+  });
+  document.getElementById('breadcrumb').innerHTML = '';
+}
+
+function openSubject(key){
+  currentSubjectKey = key;
+  selectedTopics = Object.keys(SUBJECTS[key].topics); // todas seleccionadas por defecto
+  document.getElementById('view-home').classList.add('hidden');
+  document.getElementById('view-topic').classList.remove('hidden');
+
+  const subj = SUBJECTS[key];
+  document.getElementById('topic-header-box').className = `topic-header ${subj.cls}`;
+  document.getElementById('topic-icon').textContent = subj.icon;
+  document.getElementById('topic-title').textContent = subj.name;
+  document.getElementById('topic-desc').textContent = subj.desc;
+
+  document.getElementById('breadcrumb').innerHTML = `
+    <button onclick="goHome()">Inicio</button>
+    <span class="sep">/</span>
+    <span>${subj.name}</span>
+  `;
+
+  renderTopicChecks();
+  switchMode('quiz');
+  restartSetup();
+}
+
+function goHome(){
+  document.getElementById('view-home').classList.remove('hidden');
+  document.getElementById('view-topic').classList.add('hidden');
+  renderHome();
+}
+
+function renderTopicChecks(){
+  const box = document.getElementById('topic-checks');
+  box.innerHTML = '';
+  const subj = SUBJECTS[currentSubjectKey];
+  Object.entries(subj.topics).forEach(([tkey, topic]) => {
+    const chip = document.createElement('div');
+    chip.className = 'topic-chip' + (selectedTopics.includes(tkey) ? ' selected' : '');
+    chip.onclick = () => toggleTopic(tkey);
+    chip.innerHTML = `<span class="chk">${selectedTopics.includes(tkey) ? '✓' : ''}</span> ${topic.name} (${topic.data.length})`;
+    box.appendChild(chip);
+  });
+}
+
+function toggleTopic(tkey){
+  if(selectedTopics.includes(tkey)){
+    if(selectedTopics.length > 1){ // al menos un tema debe quedar seleccionado
+      selectedTopics = selectedTopics.filter(t => t !== tkey);
+    }
+  } else {
+    selectedTopics.push(tkey);
+  }
+  renderTopicChecks();
+  if(!document.getElementById('study-panel').classList.contains('hidden')){
+    renderStudy();
+  }
+}
+
+/* ============================================================
+   MODE SWITCH (Simulador / Estudio)
+   ============================================================ */
+function switchMode(mode){
+  document.getElementById('mt-quiz').classList.toggle('active', mode==='quiz');
+  document.getElementById('mt-study').classList.toggle('active', mode==='study');
+
+  const isQuiz = mode === 'quiz';
+  document.getElementById('study-panel').classList.toggle('hidden', isQuiz);
+
+  if(isQuiz){
+    restartSetup();
+  } else {
+    document.getElementById('quiz-setup').classList.add('hidden');
+    document.getElementById('quiz-active').classList.add('hidden');
+    document.getElementById('quiz-result').classList.add('hidden');
+    renderStudy();
+  }
+}
+
+/* ============================================================
+   QUIZ HELPERS
+   ============================================================ */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function getPool(){
+  const subj = SUBJECTS[currentSubjectKey];
+  let pool = [];
+  selectedTopics.forEach(tkey => {
+    pool = pool.concat(subj.topics[tkey].data);
+  });
+  return pool;
+}
+
+function startQuiz(){
+  const numSel = document.getElementById('numQuestions').value;
+  const orderMode = document.getElementById('orderMode').value;
+
+  let pool = getPool();
+  if(orderMode === 'random'){
+    pool = shuffle(pool);
+  }
+  let n = numSel === 'all' ? pool.length : parseInt(numSel);
+  n = Math.min(n, pool.length);
+
+  quizQuestions = pool.slice(0, n).map(q => {
+    const optsWithIndex = q.o.map((text, i) => ({text, isCorrect: i===q.c}));
+    const shuffledOpts = shuffle(optsWithIndex);
+    return { q: q.q, opts: shuffledOpts };
+  });
+
+  currentIndex = 0;
+  userAnswers = new Array(quizQuestions.length).fill(null);
+  liveOk = 0; liveBad = 0;
+
+  document.getElementById('quiz-setup').classList.add('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+  document.getElementById('quiz-active').classList.remove('hidden');
+
+  updateLiveScore();
+  renderQuestion();
+}
+
+function updateLiveScore(){
+  document.getElementById('live-ok').textContent = liveOk;
+  document.getElementById('live-bad').textContent = liveBad;
+}
+
+function renderQuestion(){
+  answered = false;
+  const total = quizQuestions.length;
+  const q = quizQuestions[currentIndex];
+
+  document.getElementById('quiz-progress').textContent = `Pregunta ${currentIndex+1} de ${total}`;
+  document.getElementById('progress-fill').style.width = `${((currentIndex)/total)*100}%`;
+  document.getElementById('question-text').textContent = q.q;
+
+  const container = document.getElementById('options-container');
+  container.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'option';
+    div.onclick = () => selectOption(i);
+    div.innerHTML = `<span class="option-letter">${LETTERS[i]})</span><span>${opt.text}</span>`;
+    div.id = `opt-${i}`;
+    container.appendChild(div);
+  });
+
+  document.getElementById('nextBtn').disabled = true;
+  document.getElementById('nextBtn').textContent = (currentIndex === total-1) ? 'Finalizar ✓' : 'Siguiente →';
+}
+
+function selectOption(i){
+  if(answered) return;
+  answered = true;
+  const q = quizQuestions[currentIndex];
+  userAnswers[currentIndex] = i;
+
+  const isCorrect = q.opts[i].isCorrect;
+  if(isCorrect){ liveOk++; } else { liveBad++; }
+  globalStats.done++;
+  if(isCorrect) globalStats.ok++;
+  updateGlobalStatsUI();
+  updateLiveScore();
+
+  q.opts.forEach((opt, idx) => {
+    const el = document.getElementById(`opt-${idx}`);
+    if(opt.isCorrect){
+      el.classList.add('correct');
+    } else if(idx === i){
+      el.classList.add('incorrect');
+    }
+  });
+  document.getElementById('nextBtn').disabled = false;
+}
+
+function nextQuestion(){
+  if(currentIndex < quizQuestions.length - 1){
+    currentIndex++;
+    renderQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+function quitQuiz(){
+  if(confirm('¿Seguro que deseas salir? Se perderá el progreso de este simulacro.')){
+    restartSetup();
+  }
+}
+
+function restartSetup(){
+  document.getElementById('quiz-active').classList.add('hidden');
+  document.getElementById('quiz-result').classList.add('hidden');
+  document.getElementById('quiz-setup').classList.remove('hidden');
+}
+
+function finishQuiz(){
+  document.getElementById('progress-fill').style.width = '100%';
+  let correct = 0;
+  const reviewList = document.getElementById('review-list');
+  reviewList.innerHTML = '';
+
+  quizQuestions.forEach((q, idx) => {
+    const userIdx = userAnswers[idx];
+    const isOk = userIdx !== null && q.opts[userIdx].isCorrect;
+    if(isOk) correct++;
+
+    const correctOpt = q.opts.find(o => o.isCorrect);
+    const userOpt = userIdx !== null ? q.opts[userIdx] : null;
+
+    const div = document.createElement('div');
+    div.className = `review-item ${isOk ? 'ok' : 'bad'}`;
+    div.innerHTML = `
+      <p class="qtext">${idx+1}. ${q.q}</p>
+      <p>✅ Correcta: ${correctOpt.text}</p>
+      ${!isOk ? `<p>❌ Tu respuesta: ${userOpt ? userOpt.text : '(sin responder)'}</p>` : ''}
+    `;
+    reviewList.appendChild(div);
+  });
+
+  const total = quizQuestions.length;
+  const pct = Math.round((correct/total)*100);
+
+  document.getElementById('result-ring').style.setProperty('--pct', pct);
+  document.getElementById('ring-txt').textContent = `${pct}%`;
+
+  let msg = '';
+  if(pct >= 90) msg = '¡Excelente! Estás muy bien preparado. 🎉';
+  else if(pct >= 70) msg = 'Buen trabajo, sigue repasando los temas fallados. 💪';
+  else if(pct >= 50) msg = 'Vas por buen camino, pero necesitas repasar más. 📚';
+  else msg = 'Te recomiendo estudiar más antes del examen. ¡Tú puedes! 🙌';
+  document.getElementById('score-msg').textContent = msg;
+
+  document.getElementById('stat-ok').textContent = `✅ Correctas: ${correct}`;
+  document.getElementById('stat-bad').textContent = `❌ Incorrectas: ${total-correct}`;
+
+  document.getElementById('quiz-active').classList.add('hidden');
+  document.getElementById('quiz-result').classList.remove('hidden');
+}
+
+/* ============================================================
+   STUDY MODE
+   ============================================================ */
+function renderStudy(){
+  const search = (document.getElementById('searchBox').value || '').toLowerCase();
+  const list = document.getElementById('study-list');
+  list.innerHTML = '';
+
+  const pool = getPool();
+  let filtered = pool.filter(q => q.q.toLowerCase().includes(search));
+  document.getElementById('study-count').textContent = `Mostrando ${filtered.length} de ${pool.length} preguntas`;
+
+  filtered.forEach((q, idx) => {
+    const div = document.createElement('div');
+    div.className = 'study-item';
+    let optsHtml = '';
+    q.o.forEach((opt, i) => {
+      const isCorrect = i === q.c;
+      optsHtml += `<div class="opt-line ${isCorrect ? 'correct' : ''}">${LETTERS[i]}) ${opt}${isCorrect ? ' ✔' : ''}</div>`;
+    });
+    div.innerHTML = `
+      <div class="qnum">Pregunta ${idx+1}</div>
+      <div class="qtext">${q.q}</div>
+      ${optsHtml}
+    `;
+    list.appendChild(div);
+  });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderHome();
+updateGlobalStatsUI();
+</script>
+
+</body>
+</html>
